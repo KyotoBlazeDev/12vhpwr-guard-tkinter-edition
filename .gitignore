@@ -218,3 +218,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Tkinter Edition local runtime and data
+__pycache__/
+*.pyc
+logs/
+config.ini
+display_settings.json
+ui_settings.json
+last_shutdown.json
+venv/
+startup-task.xml
+mitigation.active
+*.tmp
+.setup-temp/
+
+.vs/

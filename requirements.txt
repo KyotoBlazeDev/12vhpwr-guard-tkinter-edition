@@ -1,0 +1,7 @@
+# Tkinter ships with the standard Windows Python installer.
+# Optional Windows event logs and toast notifications:
+pywin32>=306
+winotify>=1.1.0
+# Optional tray/background interface:
+pystray>=0.19.5
+pillow>=10.0.0
