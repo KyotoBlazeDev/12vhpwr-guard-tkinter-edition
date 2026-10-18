@@ -111,5 +111,102 @@ class RecoveryMarkerTests(unittest.TestCase):
         mitigator._clear_marker.assert_not_called()
 
 
+class CompletePinCoverageTests(unittest.TestCase):
+    def entries(self):
+        result = []
+        for label in guard.PIN_LABELS:
+            entry = guard.HWiNFOEntry()
+            entry.name_original = label.encode()
+            entry.unit = b"A"
+            entry.value = 0
+            result.append(entry)
+        return result
+
+    def test_complete_zero_sample_is_valid_and_ordered(self):
+        pins = guard.find_pin_currents(list(reversed(self.entries())))
+        self.assertEqual(list(guard.PIN_LABELS), [p[0] for p in pins])
+        self.assertTrue(all(p[1] == 0 for p in pins))
+
+    def test_missing_duplicate_and_wrong_units_are_rejected(self):
+        entries = self.entries()
+        for sample in (entries[:1], entries[:-1], entries + entries[:1],
+                       entries[:-1] + entries[:1]):
+            self.assertEqual([], guard.find_pin_currents(sample))
+        entries[0].unit = b"W"
+        self.assertEqual([], guard.find_pin_currents(entries))
+
+    def test_blank_units_remain_supported(self):
+        entries = self.entries()
+        entries[0].unit = b""
+        self.assertEqual(6, len(guard.find_pin_currents(entries)))
+
+
+class GpuIdentityTests(unittest.TestCase):
+    def nvml(self, ids):
+        nvml = mock.Mock()
+        nvml.device_count.return_value = len(ids)
+        nvml.handle.side_effect = lambda i: i
+        nvml.subsystem_id.side_effect = lambda h: ids[h]
+        return nvml
+
+    def test_explicit_mismatch_never_falls_back(self):
+        m = gpu_mitigation.GpuMitigator()
+        self.assertIsNone(m._match_gpu(self.nvml([0x1234]), 0x5678))
+
+    def test_single_matching_gpu_and_unknown_identity(self):
+        for target in (None, 0x1234):
+            m = gpu_mitigation.GpuMitigator()
+            self.assertEqual(0, m._match_gpu(self.nvml([0x1234]), target))
+
+    def test_multiple_gpus_are_ambiguous_even_with_unique_model(self):
+        for ids in ([0x1234, 0x1234], [0x1234, 0x5678]):
+            m = gpu_mitigation.GpuMitigator()
+            self.assertIsNone(m._match_gpu(self.nvml(ids), 0x1234))
+
+
+class AcquisitionRecoveryTests(unittest.TestCase):
+    def test_failed_acquisition_resets_clean_window_before_next_evaluation(self):
+        import logging
+        import threading
+        from contextlib import ExitStack
+        failures = ([], guard.TransientReadError("bad sample"),
+                    guard.SensorGoneError("disconnected"), RuntimeError("query failed"))
+        for failure in failures:
+            with self.subTest(failure=failure), ExitStack() as stack:
+                stop = threading.Event()
+                backend = mock.Mock()
+                backend.tag = 'test'
+                backend.degraded = None
+                backend.sensor = None
+                calls = []
+                def read():
+                    if not calls:
+                        calls.append(1)
+                        if isinstance(failure, Exception):
+                            raise failure
+                        return failure
+                    stop.set()
+                    return [(label, 0.0, "A") for label in guard.PIN_LABELS]
+                backend.read_pins.side_effect = read
+                response = mock.Mock()
+                response.engaged = True
+                response.clear_since = 1.0
+                def evaluate(**kwargs):
+                    self.assertIsNone(response.clear_since)
+                    return None
+                response.evaluate.side_effect = evaluate
+                for name in ('eventlog_register_source', 'run_startup_recovery',
+                             'announce_last_shutdown', 'toast', 'CrossCheck', 'FlightRecorder'):
+                    stack.enter_context(mock.patch.object(guard, name))
+                stack.enter_context(mock.patch.object(guard, 'HAVE_EVENTLOG', False))
+                stack.enter_context(mock.patch.object(guard, 'get_state', return_value={'paused': False}))
+                stack.enter_context(mock.patch.object(guard, 'set_state'))
+                stack.enter_context(mock.patch.object(guard, 'candidate_backends', return_value=[mock.Mock(key='test', return_value=backend)]))
+                stack.enter_context(mock.patch.object(guard, 'TieredResponse', return_value=response))
+                stack.enter_context(mock.patch.object(guard.time, 'sleep'))
+                guard.monitor_loop(stop, logging.getLogger('regression'))
+                response.evaluate.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

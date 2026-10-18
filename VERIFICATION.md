@@ -27,3 +27,9 @@ The software feature implementation and its automated checks are complete for th
 ## Clone migration — 2026-10-18
 
 Transferred into the cloned KyotoBlazeDev/12vhpwr-guard-tkinter-edition repository. Preserved its initial Git history, remote, adaptation copyright and upstream MIT notice. Recreated the local virtual environment, verified copied source/test/tool/asset hashes, and reran all 39 tests successfully from the cloned location. Dependency check passed. Local preferences, logs, runtime and Visual Studio state are excluded from Git. The OneDrive source remains as a backup. No commit, push, startup-task installation or event-source registration was performed during migration.
+
+## Commit review fixes — 2026-10-18
+
+- Regression suite: **46 tests, OK** after fixing incomplete/duplicate/wrong-unit HWiNFO samples, acquisition failures retaining the mitigation recovery window, and GPU identity fallback after explicit mismatches.
+- Recovery tests drive the monitoring loop with fake sensor failures and mocked response evaluation; GPU matching tests use fake NVML enumeration. Multi-GPU mitigation now falls back to shutdown-only until physical-card identity is available.
+- No live monitoring, GPU-setting calls, emergency shutdown, task registration, or physical enforcement experiment was performed for these fixes.

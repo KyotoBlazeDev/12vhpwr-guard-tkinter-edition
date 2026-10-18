@@ -389,40 +389,24 @@ class GpuMitigator:
         return True
 
     def _match_gpu(self, nvml, subsystem_id: Optional[int]):
-        """Find the NVML handle for the card the sensor backend is reading.
+        """Use subsystem identity only when exactly one physical GPU is enumerated.
 
-        Matched by subsystem id when the caller knows it. Failing that, a known Astral
-        id wins, and a machine with exactly one GPU is unambiguous anyway. Several GPUs
-        and no identification is the one case where we refuse to guess.
+        Subsystem IDs identify board models, not individual cards. Without a PCI
+        bus identity supplied by the sensor backend, multi-GPU systems must use
+        shutdown-only rather than risk applying or restoring limits on another GPU.
+        An explicit identity mismatch never permits fallback.
         """
-        count = nvml.device_count()
-        handles = []
-        for i in range(count):
-            try:
-                handle = nvml.handle(i)
-                handles.append((handle, nvml.subsystem_id(handle)))
-            except Exception:
-                continue
-
-        if subsystem_id is not None:
-            for handle, sub in handles:
-                if sub == subsystem_id:
-                    self.subsystem_id = sub
-                    return handle
-
+        if nvml.device_count() != 1:
+            return None
         try:
-            from astral_i2c import ASTRAL_SUBSYSTEM_IDS
+            handle = nvml.handle(0)
+            sub = nvml.subsystem_id(handle)
         except Exception:
-            ASTRAL_SUBSYSTEM_IDS = {}
-        for handle, sub in handles:
-            if sub in ASTRAL_SUBSYSTEM_IDS:
-                self.subsystem_id = sub
-                return handle
-
-        if len(handles) == 1:
-            self.subsystem_id = handles[0][1]
-            return handles[0][0]
-        return None
+            return None
+        if subsystem_id is not None and sub != subsystem_id:
+            return None
+        self.subsystem_id = sub
+        return handle
 
     @staticmethod
     def _safe(fn, fallback):

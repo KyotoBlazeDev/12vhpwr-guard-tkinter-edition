@@ -647,6 +647,11 @@ def find_pin_currents(entries: List[HWiNFOEntry]) -> List[Tuple[str, float, str]
         unit = _cstr(bytes(e.unit)) or "A"
         results.append((label, value, unit))
 
+    # A partial, duplicate or non-current sample cannot establish six-pin coverage.
+    if (len(results) != len(PIN_LABELS)
+            or {label for label, _, _ in results} != targets
+            or any(unit != "A" for _, _, unit in results)):
+        return []
     results.sort(key=lambda t: PIN_LABELS.index(t[0]))
     return results
 
@@ -1654,6 +1659,7 @@ def monitor_loop(stop_event: threading.Event, logger: logging.Logger):
                 last_sample_time = sample_now
 
                 if not pins:
+                    response.clear_since = None
                     if not pins_missing:
                         pins_missing = True
                         msg = "Pin sensors not found (name mismatch or sensors not active)."
@@ -1796,12 +1802,15 @@ def monitor_loop(stop_event: threading.Event, logger: logging.Logger):
                 time.sleep(POLL_INTERVAL_SEC)
 
             except TransientReadError as ex:
-                # One bad sample. Skip the tick without disturbing any timer; the
-                # backend escalates to SensorGoneError if it keeps happening.
+                response.clear_since = None
+                # One bad sample interrupts evidence of continuously clean current.
+                # Overcurrent escalation timers are retained; repeated failures
+                # are escalated to SensorGoneError by the direct backend.
                 logger.debug(f"Transient read error: {ex}")
                 time.sleep(POLL_INTERVAL_SEC)
 
             except SensorGoneError as ex:
+                response.clear_since = None
                 # The source died. Without this a stale HWiNFO mapping would keep
                 # returning last-known values and the guard would report OK forever.
                 msg = f"Sensor source lost: {ex}"
@@ -1840,6 +1849,7 @@ def monitor_loop(stop_event: threading.Event, logger: logging.Logger):
                 continue
 
             except Exception as ex:
+                response.clear_since = None
                 logger.error(f"Loop error: {ex}")
                 if HAVE_EVENTLOG:
                     eventlog_write(win32con.EVENTLOG_ERROR_TYPE, 9001, f"Loop error: {ex}")
