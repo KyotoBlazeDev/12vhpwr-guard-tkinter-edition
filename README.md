@@ -1,5 +1,5 @@
 # 12VHPWR Guard: Tkinter Edition
-This software with a GUI and overlay lets you monitor and shut down if GPU pins are overheating. No safety was changed; this is made for a new repository.
+This software with a GUI and overlay lets you monitor and shut down if GPU pins are overheating. No safety was changed; this is made for a new repository. A short name was introduced as _12VHPWR: GTE_
 
 ## Implemented feature set
 
@@ -92,19 +92,21 @@ See VERIFICATION.md for the current checks. Automated tests and a preview-only t
 
 ### Original Project
 **Humza Khalid (Human)**: Original 12VHPWR Guard developer.
+
 **Claude (AI)**: AI-assisted development of the original project.
 
 ### Community GUI Adaptation
 **Lunosama**: Developer of 12VHPWR Guard + Overlay, a graphical adaptation of the original watchdog.
 
 ### Tkinter Edition
-KyotoBlazeDev (Human): Tkinter Edition developer, interface design, integration, and testing.
-OpenAI Codex (AI): AI-assisted implementation and development.
+**KyotoBlazeDev (Human):** Tkinter Edition developer, interface design, integration, and testing.
+
+**OpenAI Codex (AI)**: AI-assisted implementation and development.
 
 ### Upstream Repositories
-Original: [https://github.com/humza-khalid/12vhpwr-guard]
+**Original:** https://github.com/humza-khalid/12vhpwr-guard
 
-GUI Overlay: [https://github.com/Lunosama/12vhpwr-guard-with-GUI]
+**GUI Overlay:** https://github.com/Lunosama/12vhpwr-guard-with-GUI
 
 ### License
 Released under the MIT License. Original copyright notices and applicable upstream license terms are preserved.
