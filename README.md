@@ -1,21 +1,5 @@
-# 12VHPWR Guard
-
-**Tkinter Edition · Based on upstream v1.3.1**
-
-Original author: humza-khalid\
-Tkinter adaptation: KyotoBlazeDev\
-Development assistance: Claude and other AI tools
-
-Based on the open-source 12VHPWR Guard project by humza-khalid. This edition introduces a Tkinter desktop interface for GPU monitoring and diagnostics.
-
-**License:** MIT\
-**Upstream copyright:** © 2025 12VHPWR Guard Contributors
-
-**Original repository:**\
-[https://github.com/humza-khalid/12vhpwr-guard](https://github.com/humza-khalid/12vhpwr-guard)
-
-This adaptation is an independent project and is not an official upstream release.
-
+# 12VHPWR Guard: Tkinter Edition
+This software with a GUI and overlay lets you monitor and shut down if GPU pins are overheating. No safety was changed; this is made for a new repository.
 
 ## Implemented feature set
 
@@ -93,7 +77,7 @@ GPU limiting and mitigation recovery currently require exactly one enumerated NV
 
 The retained engine applies its original tiered mitigation and Windows shutdown responses when monitoring runs. The dashboard exposes the current threshold, sustained time, response mode, pause/resume, and log. Settings and logs belong to this edition's folder. Increasing thresholds retains the original confirmation dialog. Closing asks to stop protection, then waits for the engine to finish resource cleanup and mitigation release.
 
-Tkinter owns the main thread; protection, rail acquisition and general GPU acquisition run in separate workers. Tray callbacks queue commands for the Tk thread. The old script filename also opens the Tkinter dashboard and propagates its exit code. Tray support is optional for dashboard use and included in requirements.txt for the full application.
+Tkinter owns the main thread; protection, rail acquisition, and general GPU acquisition run in separate workers. Tray callbacks queue commands for the Tk thread. The old script filename also opens the Tkinter dashboard and propagates its exit code. Tray support is optional for dashboard use and included in requirements.txt for the full application.
 
 Optional notifications/Event Viewer dependencies are in requirements.txt. Backend and hardware requirements, permissions, tier semantics, and sensor setup remain documented in UPSTREAM_README.md. Software tests do not establish connector safety or verify physical GPU limiting/shutdown.
 
@@ -102,4 +86,27 @@ Verification: `python -m unittest discover -s tests -v`.
 
 ## Validation scope
 
-See VERIFICATION.md for the current checks. Automated tests and a preview-only tray/overlay smoke test cover the implemented software behavior. No live mitigation, emergency shutdown, scheduled-task registration, logon launch or restart-after-failure experiment was performed during this implementation. Compatible-hardware enforcement is unverified. Optional fields, manufacturer/PSU/BTF interfaces not exposed by these providers, and non-NVIDIA general GPU telemetry remain unavailable rather than fabricated.
+See VERIFICATION.md for the current checks. Automated tests and a preview-only tray/overlay smoke test cover the implemented software behavior. No live mitigation, emergency shutdown, scheduled-task registration, logon launch, or restart-after-failure experiment was performed during this implementation. Compatible-hardware enforcement is unverified. Optional fields, manufacturer/PSU/BTF interfaces not exposed by these providers, and non-NVIDIA general GPU telemetry remain unavailable rather than fabricated.
+
+## Credits and Attribution
+
+### Original Project
+**Humza Khalid (Human)**: Original 12VHPWR Guard developer.
+**Claude (AI)**: AI-assisted development of the original project.
+
+### Community GUI Adaptation
+**Lunosama**: Developer of 12VHPWR Guard + Overlay, a graphical adaptation of the original watchdog.
+
+### Tkinter Edition
+KyotoBlazeDev (Human): Tkinter Edition developer, interface design, integration, and testing.
+OpenAI Codex (AI): AI-assisted implementation and development.
+
+### Upstream Repositories
+Original: [https://github.com/humza-khalid/12vhpwr-guard]
+
+GUI Overlay: [https://github.com/Lunosama/12vhpwr-guard-with-GUI]
+
+### License
+Released under the MIT License. Original copyright notices and applicable upstream license terms are preserved.
+
+This is an independent community adaptation, not an official release by the upstream developers.
